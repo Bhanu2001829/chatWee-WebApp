@@ -1,22 +1,19 @@
-import User from "../model/User";
-import Message from "../model/Message";
-import cloudinary from "../lib/cloudinary";
+import User from "../model/User.js";
+//import Message from "../model/Message";
+import cloudinary from "../lib/cloudinary.js";
 import {io, userSocketMap} from "../lib/socket.js";
+import Message from "../model/Message.js";
 
 
 
 // Get all the  uset to expert the logged  in user
-
-import Message from "../model/Message";
-
-
 export const getUsersForSidebar = async (req, res) => {
     try{
         const userId = req.user._id;
         const filteredUser = await User.find({_id: {$ne: userId}}).select("-password ");
 
         //Count the number of unread messages for each user
-        const unreadMessages = {}
+        const unseenMessages = {}
         const promises = filteredUser.map(async (user)=>{
             const messsages = await Message.find({
                 senderId: user._id,
@@ -24,14 +21,14 @@ export const getUsersForSidebar = async (req, res) => {
                 seen: false
             })
             if(messsages.length > 0) {
-                unreadMessages[user._id] = messsages.length;
+                unseenMessages[user._id] = messsages.length;
             }
             
 
 
         })
         await Promise.all(promises);
-        res.json({success: true, users: filteredUser, unreadMessages});
+        res.json({success: true, users: filteredUser, unseenMessages});
 
     }
     catch(error) {
@@ -49,12 +46,12 @@ export const getAllMessages = async (req, res) => {
 
         const messages = await Message.find({
             $or:[
-                {senderID: myId, receiverID: selectedUserId},
-                {senderID: selectedUserId, receiverID: myId},
+                {senderId: myId, receiverId: selectedUserId},
+                {senderId: selectedUserId, receiverId: myId},
 
             ]
         })
-        await Message.updateMany({senderId: selectedUserId, receiverID: myId, seen: true});
+        await Message.updateMany({senderId: selectedUserId, receiverId: myId, seen: true});
         res.json({success: true, messages});
 
     }catch(error) {

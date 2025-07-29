@@ -1,11 +1,12 @@
 import { generateToken } from '../lib/utils.js';
-import User from '../models/User.js';
-import bcrypt from 'bcrypt.js';
-import cloudinary from '../lib/cloudinary.js';
+import User from '../model/User.js';
+import bcrypt from "bcrypt";
+import cloudinary from "../lib/cloudinary.js";
 
 
-// sign up user account
+    // sign up  new user account
 export const signUp = async (req, res) => {
+      console.log("SIGNUP BODY:", req.body); 
     const { email, fullName, password, profilePic, bio } = req.body;
 
     // Validate input
@@ -18,7 +19,7 @@ export const signUp = async (req, res) => {
         if(!email || !fullName || !password ||!bio) {
             return res.json({success: false, message: "Missing Details"});
         }
-        const existingUser = await User.findOne({ email});
+        const user = await User.findOne({ email});
         if(user){
             return res.json({success: false, message: "Account already exists with this email"})
 
@@ -30,7 +31,7 @@ export const signUp = async (req, res) => {
             email,
             fullName,
             password: hashedPassword,
-            bio,
+            bio
     });
 
     const token = generateToken(newUser._id);
@@ -47,9 +48,14 @@ export const signUp = async (req, res) => {
 }
 //controller to login user account
 export const login = async (req, res) => {
+    console.log("LOGIN BODY:", req.body);
     try{
         const { email, password } = req.body;
         const userData = await User.findOne({email})
+
+        if (!userData) {
+      return res.json({ success: false, message: "Invalid email or password" });
+    }
 
         const isPasswordValid = await bcrypt.compare(password, userData.password);
         if(!isPasswordValid) {
@@ -73,7 +79,7 @@ export const checkAuth = (req, res) => {
     res.json({success: true, user: req.user});
     } 
 
-//Controller to update user profile
+//Controller to update user profile details
 export const updateProfile = async (req, res) => {
     
 
